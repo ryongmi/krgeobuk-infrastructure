@@ -1,0 +1,76 @@
+version: "3.8"
+
+services:
+  krgeobuk-mysql:
+    image: mysql:8.0
+    container_name: krgeobuk-mysql
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - ./mysql/init:/docker-entrypoint-initdb.d
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/conf:/etc/mysql/conf.d
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-krgeobuk_root_password}
+      MYSQL_DEV_USER_PASSWORD: ${MYSQL_DEV_USER_PASSWORD:-change_this_password}
+      # MYSQL_PROD_USER_PASSWORD: ${MYSQL_PROD_USER_PASSWORD:-change_this_password}
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+    networks:
+      - krgeobuk-network
+
+  krgeobuk-redis:
+    image: redis:7-alpine
+    container_name: krgeobuk-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - ./redis/data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD:-krgeobuk_redis_password}
+    restart: unless-stopped
+    networks:
+      - krgeobuk-network
+
+  jenkins:
+    build:
+      context: ./jenkins
+      dockerfile: Dockerfile
+    container_name: jenkins
+    ports:
+      - "${JENKINS_HTTP_PORT:-9090}:8080"
+      - "${JENKINS_AGENT_PORT:-50001}:50000"
+    volumes:
+      - ./jenkins/data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+    restart: unless-stopped
+    networks:
+      - krgeobuk-network
+    user: root
+
+  verdaccio:
+    image: verdaccio/verdaccio:5
+    container_name: verdaccio
+    ports:
+      - "${VERDACCIO_PORT:-4873}:4873"
+    volumes:
+      - ./verdaccio/storage:/verdaccio/storage
+      - ./verdaccio/config:/verdaccio/conf
+    restart: unless-stopped
+    networks:
+      - krgeobuk-network
+
+networks:
+  krgeobuk-network:
+    name: krgeobuk-network
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  jenkins-data:
+  verdaccio-storage:

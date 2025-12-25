@@ -79,6 +79,17 @@ web_modules/
 .env.production.local
 .env.local
 
+# Docker 데이터 디렉토리 (민감 정보 포함)
+docker-compose/mysql/data/
+docker-compose/redis/data/
+docker-compose/jenkins/data/
+docker-compose/verdaccio/storage/
+
+# 백업 파일 (민감 정보 포함)
+backups/
+*.sql.gz
+*.rdb.gz
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
