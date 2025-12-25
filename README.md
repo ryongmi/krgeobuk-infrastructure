@@ -16,11 +16,11 @@ krgeobuk 프로젝트의 기반 인프라 환경 리포지토리입니다.
 
 ```
 krgeobuk-infrastructure     krgeobuk-k8s              krgeobuk-deployment
-(인프라 환경)               (K8s 리소스)              (배포 오케스트레이션)
+(인프라 환경)               (K8s 리소스 + 운영)       (배포 오케스트레이션)
         │                         │                           │
         ▼                         ▼                           ▼
-   MySQL, Redis          외부 인프라 연결               배포 프로세스
-   Jenkins, NPM          (ExternalName)                Jenkins 활용
+   MySQL, Redis          매니페스트 + kubectl 조작     전체 배포 프로세스
+   Jenkins, Verdaccio    운영 스크립트                 이 리포지토리 호출
 ```
 
 **관계**:
