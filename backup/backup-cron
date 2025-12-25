@@ -1,0 +1,24 @@
+# Cron 설정 파일
+# krgeobuk 인프라 백업 자동화
+
+# 환경 변수 설정
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# 백업 스크립트 경로
+BACKUP_DIR=/opt/krgeobuk/infrastructure/backup
+
+# MySQL 백업 - 매일 새벽 2시
+0 2 * * * $BACKUP_DIR/mysql-backup.sh >> /var/log/krgeobuk/mysql-backup.log 2>&1
+
+# Redis 백업 - 매일 새벽 3시
+0 3 * * * $BACKUP_DIR/redis-backup.sh >> /var/log/krgeobuk/redis-backup.log 2>&1
+
+# 백업 파일 정리 - 매주 일요일 새벽 4시 (30일 이상 된 파일 삭제)
+0 4 * * 0 find /opt/krgeobuk/backups -name "*.gz" -mtime +30 -delete >> /var/log/krgeobuk/backup-cleanup.log 2>&1
+
+# 디스크 사용량 체크 - 매일 오전 9시
+0 9 * * * df -h /opt/krgeobuk >> /var/log/krgeobuk/disk-usage.log 2>&1
+
+# 헬스체크 - 매 30분마다
+*/30 * * * * $BACKUP_DIR/../scripts/health-check.sh >> /var/log/krgeobuk/health-check.log 2>&1

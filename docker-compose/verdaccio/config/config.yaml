@@ -1,0 +1,111 @@
+# Verdaccio 설정 파일
+# krgeobuk 프로젝트 프라이빗 NPM 레지스트리
+
+# 스토리지 경로
+storage: /verdaccio/storage
+
+# 인증 설정
+auth:
+  htpasswd:
+    file: /verdaccio/conf/htpasswd
+    # 최대 사용자 수 (-1 = 무제한)
+    max_users: -1
+    # 회원가입 허용
+    algorithm: bcrypt
+    rounds: 10
+
+# 상위 레지스트리 (npm)
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+    cache: true
+
+# 패키지 접근 제어
+packages:
+  # @krgeobuk 스코프 패키지
+  '@krgeobuk/*':
+    access: $authenticated
+    publish: $authenticated
+    unpublish: $authenticated
+    proxy: npmjs
+
+  # 프라이빗 패키지
+  '@*/*':
+    access: $authenticated
+    publish: $authenticated
+    unpublish: $authenticated
+    proxy: npmjs
+
+  # 퍼블릭 패키지
+  '**':
+    access: $all
+    publish: $authenticated
+    unpublish: $authenticated
+    proxy: npmjs
+
+# 서버 설정
+server:
+  keepAliveTimeout: 60
+
+# 웹 인터페이스
+web:
+  title: Krgeobuk NPM Registry
+  # 기본 다크 모드
+  darkMode: false
+  # 로고
+  # logo: /path/to/logo.png
+  # Gravatar 지원
+  gravatar: true
+  # 패키지 검색 정렬
+  sort_packages: asc
+
+# 로그 설정
+logs:
+  - { type: stdout, format: pretty, level: info }
+
+# 미들웨어
+middlewares:
+  audit:
+    enabled: true
+
+# 보안
+security:
+  api:
+    legacy: true
+    jwt:
+      sign:
+        expiresIn: 7d
+      verify:
+        someProp: [value]
+  web:
+    sign:
+      expiresIn: 7d
+    verify:
+      someProp: [value]
+
+# 최대 바디 크기 (패키지 업로드)
+max_body_size: 100mb
+
+# 알림 (선택사항)
+# notify:
+#   method: POST
+#   headers: [{ "Content-Type": "application/json" }]
+#   endpoint: https://your-webhook-url.com
+#   content: '{"color":"green","message":"New package published: * {{ name }}*","notify":true}'
+
+# URL 프리픽스
+url_prefix: /
+
+# Listen 주소
+listen: 0.0.0.0:4873
+
+# HTTPS (선택사항)
+# https:
+#   key: /path/to/server.key
+#   cert: /path/to/server.crt
+#   ca: /path/to/server.ca
+
+# 실험적 기능
+experiments:
+  token: false
+  search: false
