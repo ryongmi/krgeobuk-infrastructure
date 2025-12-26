@@ -59,45 +59,77 @@ krgeobuk-infrastructure/
 
 ### 1. 환경 변수 설정
 
+**중요**: `.env` 파일은 `docker-compose/` 디렉토리에 위치해야 합니다.
+
 ```bash
-cp .env.example .env
-# .env 파일을 열어 필요한 값 수정
+cd docker-compose/
+cp ../.env.example .env
+# .env 파일을 열어 비밀번호 등을 수정
 ```
 
 **필수 설정 항목**:
 ```bash
-# 비밀번호 (필수)
-MYSQL_ROOT_PASSWORD=강력한_비밀번호
-MYSQL_USER_PASSWORD=강력한_비밀번호    # 사용자 'geobuk' 비밀번호
+# MySQL 설정 (필수)
+MYSQL_ROOT_PASSWORD=강력한_비밀번호              # root 계정
+MYSQL_DEV_USER_PASSWORD=강력한_비밀번호          # dev_user 계정 (개발 DB 접근)
+# MYSQL_PROD_USER_PASSWORD=강력한_비밀번호       # geobuk 계정 (운영 DB 접근, 미니PC 배포 시 활성화)
+
+# Redis 설정 (필수)
 REDIS_PASSWORD=강력한_비밀번호
 
-# 포트 (선택, 기본값 사용 가능)
-MYSQL_PORT=3306
-REDIS_PORT=6379
-JENKINS_HTTP_PORT=9090      # 포트 충돌 시 변경
-JENKINS_AGENT_PORT=50001    # 포트 충돌 시 변경
-VERDACCIO_PORT=4873
+# Jenkins 설정 (필수)
+JENKINS_ADMIN_PASSWORD=강력한_비밀번호           # admin 계정
+
+# 포트 설정 (선택, 기본값 사용 가능)
+MYSQL_PORT=3306                                  # 127.0.0.1:3306으로 바인딩
+REDIS_PORT=6379                                  # 127.0.0.1:6379로 바인딩
+JENKINS_HTTP_PORT=9090                           # 127.0.0.1:9090으로 바인딩
+JENKINS_AGENT_PORT=50001                         # 127.0.0.1:50001로 바인딩
+VERDACCIO_PORT=4873                              # 127.0.0.1:4873으로 바인딩
 ```
+
+**보안 정책**:
+- 모든 포트는 `127.0.0.1`로만 바인딩되어 **외부 인터넷에서 접근 불가**
+- 로컬 개발 환경에서만 `localhost`를 통해 접근 가능
+- Kubernetes Pod는 `host.docker.internal`을 통해 접근
 
 ### 2. 서비스 시작
 
 ```bash
 cd docker-compose/
-docker-compose up -d
+docker compose up -d
 ```
 
 ### 3. 서비스 확인
 
 ```bash
 # 모든 컨테이너 상태 확인
-docker-compose ps
+docker compose ps
 
-# MySQL 접속 확인
-docker exec -it krgeobuk-mysql mysql -u root -p
+# MySQL 데이터베이스 목록 확인
+docker exec krgeobuk-mysql mysql -u root -pYOUR_PASSWORD -e "SHOW DATABASES;"
+
+# MySQL 개발 사용자로 접속 (dev_user)
+docker exec -it krgeobuk-mysql mysql -u dev_user -pYOUR_PASSWORD
 
 # Redis 접속 확인
-docker exec -it krgeobuk-redis redis-cli -a <REDIS_PASSWORD>
+docker exec krgeobuk-redis redis-cli -a YOUR_PASSWORD PING
 ```
+
+### 4. 생성되는 데이터베이스
+
+**개발 환경** (자동 생성):
+- `auth_dev` - auth-server용
+- `authz_dev` - authz-server용
+- `portal_dev` - portal-server용
+- `mypick_dev` - my-pick-server용
+
+**운영 환경** (미니PC 배포 시 활성화):
+- `auth_prod`, `authz_prod`, `portal_prod`, `mypick_prod`
+
+**사용자 권한**:
+- `dev_user`: 모든 개발 DB 접근 권한
+- `geobuk`: 모든 운영 DB 접근 권한 (미니PC 배포 시)
 
 ## 서비스 정보
 
