@@ -22,29 +22,54 @@ echo "==================================================================="
 
 # 사용자 생성 (환경 변수에서 비밀번호 읽기)
 mysql -u root -p"${MYSQL_ROOT_PASSWORD}" <<-EOSQL
-  -- krgeobuk 애플리케이션 dev 사용자 생성
+  -- =============================================================================
+  -- 개발 환경 사용자 생성
+  -- =============================================================================
   CREATE USER IF NOT EXISTS 'dev_user'@'%' IDENTIFIED BY '${MYSQL_DEV_USER_PASSWORD}';
-  -- krgeobuk 애플리케이션 prod 사용자 생성
+
+  -- =============================================================================
+  -- 개발 환경 데이터베이스 권한 부여
+  -- =============================================================================
+  GRANT ALL PRIVILEGES ON auth_dev.* TO 'dev_user'@'%';
+  GRANT ALL PRIVILEGES ON authz_dev.* TO 'dev_user'@'%';
+  GRANT ALL PRIVILEGES ON portal_dev.* TO 'dev_user'@'%';
+  GRANT ALL PRIVILEGES ON mypick_dev.* TO 'dev_user'@'%';
+
+  -- =============================================================================
+  -- 운영 환경 사용자 생성 (미니PC 배포 시 주석 해제)
+  -- =============================================================================
   -- CREATE USER IF NOT EXISTS 'geobuk'@'%' IDENTIFIED BY '${MYSQL_PROD_USER_PASSWORD}';
 
-  -- auth_dev 데이터베이스 권한 부여
-  GRANT ALL PRIVILEGES ON auth_dev.* TO 'dev_user'@'%';
-
-  -- auth_prod 데이터베이스 권한 부여
+  -- =============================================================================
+  -- 운영 환경 데이터베이스 권한 부여 (미니PC 배포 시 주석 해제)
+  -- =============================================================================
   -- GRANT ALL PRIVILEGES ON auth_prod.* TO 'geobuk'@'%';
+  -- GRANT ALL PRIVILEGES ON authz_prod.* TO 'geobuk'@'%';
+  -- GRANT ALL PRIVILEGES ON portal_prod.* TO 'geobuk'@'%';
+  -- GRANT ALL PRIVILEGES ON mypick_prod.* TO 'geobuk'@'%';
 
+  -- =============================================================================
   -- 권한 적용
+  -- =============================================================================
   FLUSH PRIVILEGES;
 
+  -- =============================================================================
   -- 생성된 사용자 확인
+  -- =============================================================================
   SELECT User, Host FROM mysql.user WHERE User = 'dev_user';
   -- SELECT User, Host FROM mysql.user WHERE User = 'geobuk';
 EOSQL
 
 echo "✓ dev_user 사용자 생성 완료"
 echo "  - auth_dev 권한 부여: OK"
+echo "  - authz_dev 권한 부여: OK"
+echo "  - portal_dev 권한 부여: OK"
+echo "  - mypick_dev 권한 부여: OK"
 # echo "✓ geobuk 사용자 생성 완료"
 # echo "  - auth_prod 권한 부여: OK"
+# echo "  - authz_prod 권한 부여: OK"
+# echo "  - portal_prod 권한 부여: OK"
+# echo "  - mypick_prod 권한 부여: OK"
 echo "==================================================================="
 echo "MySQL 사용자 설정 완료!"
 echo "==================================================================="
