@@ -7,7 +7,7 @@ set -e  # 에러 발생 시 즉시 종료
 # 설정
 DATE=$(date +%Y%m%d_%H%M%S)
 REDIS_BACKUP_DIR="${REDIS_BACKUP_DIR:-${BACKUP_DIR:-/opt/krgeobuk/backups}/redis}"
-RETENTION_DAYS="${RETENTION_DAYS:-7}"
+REDIS_RETENTION_DAYS="${REDIS_RETENTION_DAYS:-${RETENTION_DAYS:-7}}"
 REDIS_PASSWORD="${REDIS_PASSWORD:-krgeobuk_redis_password}"
 
 # 백업 디렉토리 생성
@@ -38,8 +38,8 @@ else
 fi
 
 # 오래된 백업 파일 삭제
-echo "Cleaning up old backups (older than ${RETENTION_DAYS} days)..."
-find "${REDIS_BACKUP_DIR}" -name "*.rdb.gz" -mtime +${RETENTION_DAYS} -delete
+echo "Cleaning up old backups (older than ${REDIS_RETENTION_DAYS} days)..."
+find "${REDIS_BACKUP_DIR}" -name "*.rdb.gz" -mtime +${REDIS_RETENTION_DAYS} -delete
 
 # 백업 목록 표시
 echo ""

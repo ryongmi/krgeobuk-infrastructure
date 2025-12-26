@@ -7,7 +7,7 @@ set -e  # 에러 발생 시 즉시 종료
 # 설정
 DATE=$(date +%Y%m%d_%H%M%S)
 MYSQL_BACKUP_DIR="${MYSQL_BACKUP_DIR:-${BACKUP_DIR:-/opt/krgeobuk/backups}/mysql}"
-RETENTION_DAYS="${RETENTION_DAYS:-7}"
+MYSQL_RETENTION_DAYS="${MYSQL_RETENTION_DAYS:-${RETENTION_DAYS:-7}}"
 MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-krgeobuk_root_password}"
 
 # 백업 디렉토리 생성
@@ -43,8 +43,8 @@ else
 fi
 
 # 오래된 백업 파일 삭제
-echo "Cleaning up old backups (older than ${RETENTION_DAYS} days)..."
-find "${MYSQL_BACKUP_DIR}" -name "*.sql.gz" -mtime +${RETENTION_DAYS} -delete
+echo "Cleaning up old backups (older than ${MYSQL_RETENTION_DAYS} days)..."
+find "${MYSQL_BACKUP_DIR}" -name "*.sql.gz" -mtime +${MYSQL_RETENTION_DAYS} -delete
 
 # 백업 목록 표시
 echo ""
