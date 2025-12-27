@@ -5,7 +5,7 @@ services:
     image: mysql:8.0
     container_name: krgeobuk-mysql
     ports:
-      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
+      - "0.0.0.0:${MYSQL_PORT:-3306}:3306"
     volumes:
       - ./mysql/init:/docker-entrypoint-initdb.d
       - ./mysql/data:/var/lib/mysql
@@ -25,7 +25,7 @@ services:
     image: redis:7-alpine
     container_name: krgeobuk-redis
     ports:
-      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+      - "0.0.0.0:${REDIS_PORT:-6379}:6379"
     volumes:
       - ./redis/data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
