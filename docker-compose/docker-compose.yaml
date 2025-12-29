@@ -56,7 +56,7 @@ services:
     image: verdaccio/verdaccio:5
     container_name: verdaccio
     ports:
-      - "127.0.0.1:${VERDACCIO_PORT:-4873}:4873"
+      - "0.0.0.0:${VERDACCIO_PORT:-4873}:4873"
     volumes:
       - ./verdaccio/storage:/verdaccio/storage
       - ./verdaccio/config:/verdaccio/conf
