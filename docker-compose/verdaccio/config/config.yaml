@@ -23,21 +23,21 @@ uplinks:
 # 패키지 접근 제어
 packages:
   # @krgeobuk 스코프 패키지
-  '@krgeobuk/*':
-    access: $authenticated
+  "@krgeobuk/*":
+    access: $all
     publish: $authenticated
     unpublish: $authenticated
     proxy: npmjs
 
   # 프라이빗 패키지
-  '@*/*':
+  "@*/*":
     access: $authenticated
     publish: $authenticated
     unpublish: $authenticated
     proxy: npmjs
 
   # 퍼블릭 패키지
-  '**':
+  "**":
     access: $all
     publish: $authenticated
     unpublish: $authenticated
