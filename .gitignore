@@ -83,6 +83,7 @@ web_modules/
 docker-compose/mysql/data/
 docker-compose/redis/data/
 docker-compose/jenkins/data/
+docker-compose/verdaccio/config/htpasswd
 docker-compose/verdaccio/storage/
 
 # 백업 파일 (민감 정보 포함)
