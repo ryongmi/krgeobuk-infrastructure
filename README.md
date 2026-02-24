@@ -1,97 +1,97 @@
 # krgeobuk-infrastructure
 
-krgeobuk 프로젝트의 기반 인프라 환경 리포지토리입니다.
+krgeobuk 프로젝트의 기반 인프라 환경을 관리하는 리포지토리입니다.
 
-## 📌 리포지토리 역할
+## 역할
 
-이 리포지토리는 **애플리케이션 실행에 필요한 기반 인프라**를 제공합니다:
+- MySQL 데이터베이스 (Docker Compose)
+- Redis 캐시 서버 (Docker Compose)
+- 백업/복구 스크립트
+- Kubernetes Dashboard 매니페스트
 
-- ✅ MySQL 데이터베이스 (dev, prod 환경)
-- ✅ Redis 캐시 서버
-- ✅ Jenkins CI/CD 서버
-- ✅ Verdaccio 프라이빗 NPM 레지스트리
-- ✅ 백업/복구 스크립트
+> Jenkins와 Verdaccio는 K8s로 이관되었습니다.
+> → `krgeobuk-deployment/jenkins/k8s/`, `krgeobuk-deployment/verdaccio/k8s/`
 
-## 🔗 다른 리포지토리와의 관계
+## 다른 리포지토리와의 관계
 
 ```
-krgeobuk-infrastructure     krgeobuk-k8s              krgeobuk-deployment
-(인프라 환경)               (K8s 리소스 + 운영)       (배포 오케스트레이션)
-        │                         │                           │
-        ▼                         ▼                           ▼
-   MySQL, Redis          매니페스트 + kubectl 조작     전체 배포 프로세스
-   Jenkins, Verdaccio    운영 스크립트                 이 리포지토리 호출
+krgeobuk-infrastructure       krgeobuk-k8s
+(이 리포지토리)               (애플리케이션 K8s 매니페스트)
+        │                             │
+        ▼                             ▼
+  MySQL, Redis                ExternalName Service로
+  (Docker Compose)            MySQL, Redis에 연결
 ```
 
-**관계**:
-- **krgeobuk-infrastructure** (이 리포지토리): 기반 인프라 제공
-- **krgeobuk-k8s**: ExternalName Service로 이 인프라에 연결
-- **krgeobuk-deployment**: Jenkins를 사용한 CI/CD 파이프라인 실행
+- **krgeobuk-k8s**: 각 서비스의 K8s 매니페스트에서 `ExternalName` Service로 이 리포지토리의 MySQL, Redis에 접근
 
-## 🎯 제공하는 서비스
-
-| 서비스 | 포트 | 용도 | 환경 |
-|--------|------|------|------|
-| **MySQL** | 3306 | 데이터베이스 | dev, prod |
-| **Redis** | 6379 | 캐시/세션 | dev, prod |
-| **Jenkins** | 9090 | CI/CD | 공통 |
-| **Verdaccio** | 4873 | NPM 레지스트리 | 공통 |
+---
 
 ## 구조
 
 ```
 krgeobuk-infrastructure/
+│
 ├── docker-compose/
-│   ├── docker-compose.yaml        # 메인 Compose 파일
-│   ├── mysql/                     # MySQL 설정
-│   │   ├── init/                  # 초기화 SQL 스크립트
-│   │   ├── conf/                  # MySQL 설정 파일
-│   │   └── data/                  # 데이터 볼륨 (git 제외)
-│   ├── redis/                     # Redis 설정
-│   ├── jenkins/                   # Jenkins 설정
-│   └── verdaccio/                 # Verdaccio 설정
-├── backup/                        # 백업 스크립트
-├── scripts/                       # 유틸리티 스크립트
-└── docs/                          # 문서
+│   ├── docker-compose.yaml         # MySQL, Redis Compose 파일
+│   ├── mysql/
+│   │   ├── init/                   # 초기화 스크립트 (DB, 사용자 자동 생성)
+│   │   │   ├── 01-create-databases.sql
+│   │   │   └── 02-create-users.sh
+│   │   ├── conf/my.cnf             # MySQL 설정
+│   │   └── data/                   # 데이터 볼륨 (git 제외)
+│   └── redis/
+│       ├── redis.conf              # Redis 설정
+│       └── data/                   # 데이터 볼륨 (git 제외)
+│
+├── backup/                         # 백업/복구 스크립트
+│   ├── mysql-backup.sh
+│   ├── redis-backup.sh
+│   ├── restore.sh
+│   └── backup-cron                 # cron 등록용 설정
+│
+├── scripts/                        # 유틸리티 스크립트
+│   ├── start-all.sh                # 전체 서비스 시작
+│   ├── stop-all.sh                 # 전체 서비스 중지
+│   ├── health-check.sh             # 서비스 상태 확인
+│   └── init-databases.sh           # DB 수동 초기화
+│
+├── k8s/
+│   └── dashboard/                  # Kubernetes Dashboard 매니페스트
+│       ├── admin-user.yaml         # 관리자 ServiceAccount
+│       ├── ingress.yaml            # Dashboard Ingress
+│       ├── install.sh              # 설치 스크립트
+│       ├── uninstall.sh            # 제거 스크립트
+│       └── get-token.sh            # 로그인 토큰 생성
+│
+└── .env.example                    # 환경 변수 템플릿
 ```
+
+---
 
 ## 시작하기
 
 ### 1. 환경 변수 설정
 
-**중요**: `.env` 파일은 `docker-compose/` 디렉토리에 위치해야 합니다.
+`.env` 파일은 `docker-compose/` 디렉토리에 위치해야 합니다.
 
 ```bash
 cd docker-compose/
 cp ../.env.example .env
-# .env 파일을 열어 비밀번호 등을 수정
+vi .env   # 비밀번호 등 실제 값 입력
 ```
 
-**필수 설정 항목**:
-```bash
-# MySQL 설정 (필수)
-MYSQL_ROOT_PASSWORD=강력한_비밀번호              # root 계정
-MYSQL_DEV_USER_PASSWORD=강력한_비밀번호          # dev_user 계정 (개발 DB 접근)
-# MYSQL_PROD_USER_PASSWORD=강력한_비밀번호       # geobuk 계정 (운영 DB 접근, 미니PC 배포 시 활성화)
+필수 설정 항목:
 
-# Redis 설정 (필수)
-REDIS_PASSWORD=강력한_비밀번호
+| 변수 | 설명 |
+|---|---|
+| `MYSQL_ROOT_PASSWORD` | MySQL root 비밀번호 |
+| `MYSQL_DEV_USER_PASSWORD` | dev_user 비밀번호 (개발 DB 접근) |
+| `REDIS_PASSWORD` | Redis 비밀번호 |
+| `MYSQL_PORT` | MySQL 외부 포트 (기본값: 3306) |
+| `REDIS_PORT` | Redis 외부 포트 (기본값: 6379) |
 
-# Jenkins 설정 (필수)
-JENKINS_ADMIN_PASSWORD=강력한_비밀번호           # admin 계정
-
-# 포트 설정 (선택, 기본값 사용 가능)
-MYSQL_PORT=3306                                  # 127.0.0.1:3306으로 바인딩
-REDIS_PORT=6379                                  # 127.0.0.1:6379로 바인딩
-JENKINS_HTTP_PORT=9090                           # 127.0.0.1:9090으로 바인딩
-JENKINS_AGENT_PORT=50001                         # 127.0.0.1:50001로 바인딩
-VERDACCIO_PORT=4873                              # 127.0.0.1:4873으로 바인딩
-```
-
-**보안 정책**:
-- 모든 포트는 `127.0.0.1`로만 바인딩되어 **외부 인터넷에서 접근 불가**
-- 로컬 개발 환경에서만 `localhost`를 통해 접근 가능
-- Kubernetes Pod는 `host.docker.internal`을 통해 접근
+> 모든 포트는 `127.0.0.1`로만 바인딩되어 외부에서 직접 접근 불가합니다.
 
 ### 2. 서비스 시작
 
@@ -100,180 +100,189 @@ cd docker-compose/
 docker compose up -d
 ```
 
+또는 유틸리티 스크립트 사용:
+
+```bash
+./scripts/start-all.sh
+```
+
 ### 3. 서비스 확인
 
 ```bash
-# 모든 컨테이너 상태 확인
-docker compose ps
+# 컨테이너 상태 확인
+docker compose -f docker-compose/docker-compose.yaml ps
 
-# MySQL 데이터베이스 목록 확인
-docker exec krgeobuk-mysql mysql -u root -pYOUR_PASSWORD -e "SHOW DATABASES;"
-
-# MySQL 개발 사용자로 접속 (dev_user)
-docker exec -it krgeobuk-mysql mysql -u dev_user -pYOUR_PASSWORD
+# MySQL 접속 확인
+docker exec krgeobuk-mysql mysql -u root -p -e "SHOW DATABASES;"
 
 # Redis 접속 확인
 docker exec krgeobuk-redis redis-cli -a YOUR_PASSWORD PING
+
+# 전체 헬스체크
+./scripts/health-check.sh
 ```
 
 ### 4. 생성되는 데이터베이스
 
-**개발 환경** (자동 생성):
-- `auth_dev` - auth-server용
-- `authz_dev` - authz-server용
-- `portal_dev` - portal-server용
-- `mypick_dev` - my-pick-server용
+초기화 스크립트(`mysql/init/`)에 의해 자동 생성됩니다.
 
-**운영 환경** (미니PC 배포 시 활성화):
-- `auth_prod`, `authz_prod`, `portal_prod`, `mypick_prod`
+**개발 환경:**
 
-**사용자 권한**:
-- `dev_user`: 모든 개발 DB 접근 권한
-- `geobuk`: 모든 운영 DB 접근 권한 (미니PC 배포 시)
+| 데이터베이스 | 용도 |
+|---|---|
+| `auth_dev` | auth-server |
+| `authz_dev` | authz-server |
+| `portal_dev` | portal-server |
+| `mypick_dev` | my-pick-server |
+
+**운영 환경** (`.env`에서 `MYSQL_PROD_USER_PASSWORD` 활성화 시):
+
+| 데이터베이스 | 용도 |
+|---|---|
+| `auth_prod` | auth-server |
+| `authz_prod` | authz-server |
+| `portal_prod` | portal-server |
+| `mypick_prod` | my-pick-server |
+
+**사용자 권한:**
+- `dev_user`: 모든 `*_dev` DB 접근
+- `geobuk`: 모든 `*_prod` DB 접근 (운영 환경)
+
+---
 
 ## 서비스 정보
 
 ### MySQL
-- **외부 포트**: `${MYSQL_PORT:-3306}` (환경 변수로 변경 가능)
-- **내부 포트**: 3306
-- **데이터베이스**:
-  - `auth_dev` (개발 환경)
-  - `auth_prod` (운영 환경)
-- **애플리케이션 사용자**: `geobuk`
-- **root 사용자**: `root` (관리 전용)
+
+- **이미지**: `mysql:8.0`
+- **외부 포트**: `${MYSQL_PORT:-3306}` → `127.0.0.1` 바인딩
+- **문자셋**: `utf8mb4` / `utf8mb4_unicode_ci`
+- **설정 파일**: `docker-compose/mysql/conf/my.cnf`
 
 ### Redis
-- **외부 포트**: `${REDIS_PORT:-6379}` (환경 변수로 변경 가능)
-- **내부 포트**: 6379
-- **DB 번호**:
-  - `0`: auth-dev
-  - `1`: auth-prod
 
-### Jenkins
-- **HTTP 포트**: `${JENKINS_HTTP_PORT:-9090}` (기본값: 9090)
-- **Agent 포트**: `${JENKINS_AGENT_PORT:-50001}` (기본값: 50001)
-- **볼륨**: `./jenkins/data`
-- **접속**: `http://localhost:9090`
+- **이미지**: `redis:7-alpine`
+- **외부 포트**: `${REDIS_PORT:-6379}` → `127.0.0.1` 바인딩
+- **설정 파일**: `docker-compose/redis/redis.conf`
+- **인증**: `requirepass` 적용
 
-### Verdaccio
-- **외부 포트**: `${VERDACCIO_PORT:-4873}` (환경 변수로 변경 가능)
-- **내부 포트**: 4873
-- **설정**: `./verdaccio/config`
-- **접속**: `http://localhost:4873`
+---
 
 ## 백업
 
-백업 스크립트는 `backup/` 디렉토리에 있습니다:
+### MySQL 백업
 
 ```bash
-# MySQL 백업
 ./backup/mysql-backup.sh
+```
 
-# Redis 백업
+백업 파일은 기본적으로 `/opt/krgeobuk/backups/mysql`에 저장됩니다.
+경로를 변경하려면 `.env`에서 설정합니다:
+
+```bash
+MYSQL_BACKUP_DIR=/path/to/backup
+```
+
+### Redis 백업
+
+```bash
 ./backup/redis-backup.sh
+```
 
-# 복구
+### 복구
+
+```bash
 ./backup/restore.sh <backup_file> <mysql|redis>
 ```
 
-## 문제 해결
-
-### 포트 충돌 해결
-
-**증상**: "Bind for 0.0.0.0:9090 failed: port is already allocated"
-
-**원인**: 해당 포트가 이미 다른 프로세스에서 사용 중
-
-**해결 방법**:
+### cron 등록 (자동 백업)
 
 ```bash
-# 1. 사용 중인 포트 확인 (Windows)
-netstat -ano | findstr :9090
-
-# 2. .env 파일에서 포트 변경
-JENKINS_HTTP_PORT=9091      # 9090 → 9091로 변경
-JENKINS_AGENT_PORT=50002    # 50001 → 50002로 변경
-
-# 3. 컨테이너 재시작
-docker-compose down
-docker-compose up -d
+# backup/backup-cron 내용 참고
+crontab -e
+# 예: 매일 새벽 2시 MySQL 백업
+# 0 2 * * * /path/to/backup/mysql-backup.sh
 ```
 
-**포트 변경 예시**:
+---
+
+## Kubernetes Dashboard
+
+k3s 클러스터를 웹 UI로 관리할 수 있는 Kubernetes Dashboard입니다.
+
+### 설치
+
 ```bash
-# .env 파일
-MYSQL_PORT=3307           # 3306이 사용 중이면
-REDIS_PORT=6380           # 6379가 사용 중이면
-JENKINS_HTTP_PORT=9091    # 9090이 사용 중이면
+cd k8s/dashboard/
+chmod +x install.sh
+./install.sh
+```
+
+설치 후 로그인 토큰 생성:
+
+```bash
+./get-token.sh
+```
+
+### 접속
+
+| 방법 | URL |
+|---|---|
+| Ingress (로컬) | `http://dashboard.192.168.0.28.nip.io` |
+| kubectl proxy | `http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/` |
+
+상세 내용은 [k8s/dashboard/README.md](./k8s/dashboard/README.md)를 참조하세요.
+
+### 제거
+
+```bash
+./k8s/dashboard/uninstall.sh
+```
+
+---
+
+## 문제 해결
+
+### 포트 충돌
+
+```bash
+# 사용 중인 포트 확인 (Linux)
+ss -tlnp | grep 3306
+
+# .env에서 포트 변경 후 재시작
+MYSQL_PORT=3307
+docker compose -f docker-compose/docker-compose.yaml down
+docker compose -f docker-compose/docker-compose.yaml up -d
 ```
 
 ### 컨테이너 로그 확인
+
 ```bash
-docker-compose logs -f [service_name]
+docker compose -f docker-compose/docker-compose.yaml logs -f krgeobuk-mysql
+docker compose -f docker-compose/docker-compose.yaml logs -f krgeobuk-redis
 ```
 
 ### 컨테이너 재시작
+
 ```bash
-docker-compose restart [service_name]
+docker compose -f docker-compose/docker-compose.yaml restart krgeobuk-mysql
 ```
 
-### 모든 서비스 중지 및 제거
-```bash
-docker-compose down
-```
+---
 
-## 🔒 보안 주의사항
+## 보안 주의사항
 
-### 중요: 비밀번호 관리
+Git에 절대 커밋하지 않는 파일:
 
-**절대로 Git에 커밋하지 마세요**:
-- ✅ `.env.example` - 템플릿만 (기본값 또는 플레이스홀더)
-- ❌ `.env` - 실제 비밀번호 포함 (.gitignore에 포함됨)
-- ❌ `docker-compose/*/data/` - 데이터베이스 파일
-- ❌ `backup/*.sql.gz` - 백업 파일
+| 파일 | 이유 |
+|---|---|
+| `docker-compose/.env` | 실제 비밀번호 포함 |
+| `docker-compose/*/data/` | 데이터베이스 파일 |
+| `backup/*.sql.gz` | 백업 파일 |
 
-### 환경 변수 보안
+비밀번호 생성:
 
-**`.env` 파일 설정 예시**:
-```bash
-# 강력한 비밀번호 사용 (최소 16자, 영문+숫자+특수문자)
-MYSQL_ROOT_PASSWORD=MyStr0ng!R00tP@ssw0rd2024
-MYSQL_USER_PASSWORD=Ge0buk$erv1ceP@ss!2024    # 'geobuk' 사용자
-REDIS_PASSWORD=Red1sS3cur3P@ssw0rd!2024
-```
-
-**비밀번호 생성 방법**:
 ```bash
 # OpenSSL로 랜덤 비밀번호 생성
 openssl rand -base64 32
-
-# 또는 pwgen (설치 필요)
-pwgen -s 32 1
 ```
-
-### MySQL 사용자 생성 방식
-
-**보안 개선 (환경 변수 사용)**:
-- ✅ `02-create-users.sh` - 환경 변수에서 비밀번호 로드
-- ❌ ~~`02-create-users.sql`~~ - 평문 비밀번호 노출 (삭제됨)
-
-**동작 방식**:
-1. `.env` 파일에 `MYSQL_USER_PASSWORD` 설정
-2. `docker-compose.yaml`에서 환경 변수로 전달
-3. `02-create-users.sh` 스크립트가 환경 변수 읽어서 'geobuk' 사용자 생성
-
-### 프로덕션 체크리스트
-
-배포 전 반드시 확인:
-- [ ] `.env` 파일의 모든 비밀번호 변경
-- [ ] 비밀번호 강도 확인 (16자 이상, 복잡도 높음)
-- [ ] `.gitignore`에 `.env` 포함 확인
-- [ ] Git 히스토리에 비밀번호 노출 여부 확인
-- [ ] 백업 파일 암호화 고려
-
-## 참고
-
-- 데이터 파일 (`docker-compose/*/data/`)은 Git에서 제외됩니다.
-- 프로덕션 환경에서는 `.env` 파일의 비밀번호를 반드시 변경하세요.
-- 정기적인 백업을 권장합니다.
-- **보안 사고 발생 시**: 즉시 모든 비밀번호 변경 및 데이터베이스 접근 로그 확인
