@@ -34,35 +34,37 @@ services:
     networks:
       - krgeobuk-network
 
-  jenkins:
-    build:
-      context: ./jenkins
-      dockerfile: Dockerfile
-    container_name: jenkins
-    ports:
-      - "127.0.0.1:${JENKINS_HTTP_PORT:-9090}:8080"
-      - "127.0.0.1:${JENKINS_AGENT_PORT:-50001}:50000"
-    volumes:
-      - ./jenkins/data:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
-    restart: unless-stopped
-    networks:
-      - krgeobuk-network
-    user: root
+  # jenkins: K8s로 이관 (krgeobuk-deployment/jenkins/k8s/)
+  # jenkins:
+  #   build:
+  #     context: ./jenkins
+  #     dockerfile: Dockerfile
+  #   container_name: jenkins
+  #   ports:
+  #     - "127.0.0.1:${JENKINS_HTTP_PORT:-9090}:8080"
+  #     - "127.0.0.1:${JENKINS_AGENT_PORT:-50001}:50000"
+  #   volumes:
+  #     - ./jenkins/data:/var/jenkins_home
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   environment:
+  #     JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+  #   restart: unless-stopped
+  #   networks:
+  #     - krgeobuk-network
+  #   user: root
 
-  verdaccio:
-    image: verdaccio/verdaccio:5
-    container_name: verdaccio
-    ports:
-      - "0.0.0.0:${VERDACCIO_PORT:-4873}:4873"
-    volumes:
-      - ./verdaccio/storage:/verdaccio/storage
-      - ./verdaccio/config:/verdaccio/conf
-    restart: unless-stopped
-    networks:
-      - krgeobuk-network
+  # verdaccio: K8s로 이관 (krgeobuk-deployment/verdaccio/k8s/)
+  # verdaccio:
+  #   image: verdaccio/verdaccio:5
+  #   container_name: verdaccio
+  #   ports:
+  #     - "0.0.0.0:${VERDACCIO_PORT:-4873}:4873"
+  #   volumes:
+  #     - ./verdaccio/storage:/verdaccio/storage
+  #     - ./verdaccio/config:/verdaccio/conf
+  #   restart: unless-stopped
+  #   networks:
+  #     - krgeobuk-network
 
 networks:
   krgeobuk-network:
@@ -72,5 +74,5 @@ networks:
 volumes:
   mysql-data:
   redis-data:
-  jenkins-data:
-  verdaccio-storage:
+  # jenkins-data:     # K8s로 이관
+  # verdaccio-storage: # K8s로 이관
