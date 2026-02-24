@@ -91,7 +91,8 @@ vi .env   # 비밀번호 등 실제 값 입력
 | `MYSQL_PORT` | MySQL 외부 포트 (기본값: 3306) |
 | `REDIS_PORT` | Redis 외부 포트 (기본값: 6379) |
 
-> 모든 포트는 `127.0.0.1`로만 바인딩되어 외부에서 직접 접근 불가합니다.
+> 포트는 `0.0.0.0`으로 바인딩되어 모든 인터페이스에서 접근 가능합니다.
+> K8s 파드가 호스트 IP를 통해 MySQL, Redis에 접근하기 위해 필요한 설정입니다.
 
 ### 2. 서비스 시작
 
@@ -155,14 +156,14 @@ docker exec krgeobuk-redis redis-cli -a YOUR_PASSWORD PING
 ### MySQL
 
 - **이미지**: `mysql:8.0`
-- **외부 포트**: `${MYSQL_PORT:-3306}` → `127.0.0.1` 바인딩
+- **외부 포트**: `${MYSQL_PORT:-3306}` → `0.0.0.0` 바인딩 (K8s 파드 접근용)
 - **문자셋**: `utf8mb4` / `utf8mb4_unicode_ci`
 - **설정 파일**: `docker-compose/mysql/conf/my.cnf`
 
 ### Redis
 
 - **이미지**: `redis:7-alpine`
-- **외부 포트**: `${REDIS_PORT:-6379}` → `127.0.0.1` 바인딩
+- **외부 포트**: `${REDIS_PORT:-6379}` → `0.0.0.0` 바인딩 (K8s 파드 접근용)
 - **설정 파일**: `docker-compose/redis/redis.conf`
 - **인증**: `requirepass` 적용
 
