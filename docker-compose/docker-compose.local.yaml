@@ -1,0 +1,26 @@
+version: "3.8"
+
+# 로컬 개발 전용 - Verdaccio 프라이빗 NPM 레지스트리
+# 사용법:
+#   시작: docker-compose -f docker-compose.local.yaml up -d
+#   중지: docker-compose -f docker-compose.local.yaml down
+
+services:
+  verdaccio:
+    image: verdaccio/verdaccio:5
+    container_name: krgeobuk-verdaccio
+    ports:
+      - "0.0.0.0:${VERDACCIO_PORT:-4873}:4873"
+    volumes:
+      - ./verdaccio/storage:/verdaccio/storage
+      - ./verdaccio/config:/verdaccio/conf
+    environment:
+      - VERDACCIO_PORT=4873
+    restart: unless-stopped
+    networks:
+      - krgeobuk-network
+
+networks:
+  krgeobuk-network:
+    name: krgeobuk-network
+    driver: bridge
