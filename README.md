@@ -134,7 +134,7 @@ docker exec krgeobuk-redis redis-cli -a YOUR_PASSWORD PING
 | `auth_dev` | auth-server |
 | `authz_dev` | authz-server |
 | `portal_dev` | portal-server |
-| `mypick_dev` | my-pick-server |
+| `mypick_dev` | mypick-server |
 
 **운영 환경** (`.env`에서 `MYSQL_PROD_USER_PASSWORD` 활성화 시):
 
@@ -143,7 +143,7 @@ docker exec krgeobuk-redis redis-cli -a YOUR_PASSWORD PING
 | `auth_prod` | auth-server |
 | `authz_prod` | authz-server |
 | `portal_prod` | portal-server |
-| `mypick_prod` | my-pick-server |
+| `mypick_prod` | mypick-server |
 
 **사용자 권한:**
 - `dev_user`: 모든 `*_dev` DB 접근

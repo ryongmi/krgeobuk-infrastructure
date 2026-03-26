@@ -14,7 +14,7 @@ CREATE DATABASE IF NOT EXISTS authz_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_un
 -- portal-server용 데이터베이스
 CREATE DATABASE IF NOT EXISTS portal_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- my-pick-server용 데이터베이스
+-- mypick-server용 데이터베이스
 CREATE DATABASE IF NOT EXISTS mypick_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- =============================================================================
@@ -31,7 +31,7 @@ CREATE DATABASE IF NOT EXISTS mypick_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_u
 -- portal-server용 운영 데이터베이스
 -- CREATE DATABASE IF NOT EXISTS portal_prod CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- my-pick-server용 운영 데이터베이스
+-- mypick-server용 운영 데이터베이스
 -- CREATE DATABASE IF NOT EXISTS mypick_prod CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- =============================================================================

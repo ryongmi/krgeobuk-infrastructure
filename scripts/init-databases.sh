@@ -113,7 +113,7 @@ GRANT ALL PRIVILEGES ON authz_prod.* TO 'authz_user'@'%';
 CREATE USER IF NOT EXISTS 'portal_user'@'%' IDENTIFIED BY '${PORTAL_PASSWORD}';
 GRANT ALL PRIVILEGES ON portal.* TO 'portal_user'@'%';
 
--- my-pick-server 사용자
+-- mypick-server 사용자
 CREATE USER IF NOT EXISTS 'mypick_user'@'%' IDENTIFIED BY '${MYPICK_PASSWORD}';
 GRANT ALL PRIVILEGES ON mypick.* TO 'mypick_user'@'%';
 
@@ -170,7 +170,7 @@ echo -e "  - DB 1: auth-prod"
 echo -e "  - DB 2: authz-dev"
 echo -e "  - DB 3: authz-prod"
 echo -e "  - DB 4: portal"
-echo -e "  - DB 5: my-pick"
+echo -e "  - DB 5: mypick"
 
 echo ""
 echo -e "${YELLOW}다음 단계:${NC}"
